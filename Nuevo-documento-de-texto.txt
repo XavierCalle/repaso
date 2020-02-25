@@ -1,0 +1,73 @@
+1) Crear proyecto con cuentas individuales- no olvidar
+
+2) Cambiar string en appjson
+
+3) Migracion de las tablas del sistema 
+	Add-Migration migracion1 -Context ApplicationDbContext
+	Update-Database
+
+4) Ingenieria inversa, crear modelos a partir de tablas existentes en BD, no olvidar "-t"
+Scaffold-DbContext 'Data Source=DESKTOP-8N9QUA0; Initial Catalog=repaso; User Id=ronny; Password=naty' Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -t category,purchase
+Armar string antes de copiar a la consola nugget
+
+5) Crear controladores
+
+6) Inyeccion de dependencias
+	//inyeccion dependencia tablas dev con contexto dev generado por scaffold
+        var connection = Configuration.GetConnectionString("DefaultConnection");
+        services.AddDbContext<repasoContext>(options => options.UseSqlServer(connection));
+
+7) Autenticacion de usuario
+	@if (User.Identity.IsAuthenticated)
+
+8) Filtro para usar id de usuario logeado
+
+	8.1) Agregar manager en el constructor
+
+	//enlace con usuario
+        private readonly UserManager<IdentityUser> _manager;
+        public PurchasesController(UserManager<IdentityUser> manager, repasoContext context)
+        {
+            //inicializa contexto del negocio
+            _context = context;
+            //inicializa manager de usuario
+            _manager = manager;
+        }
+        //obtener usuario actual
+        private async Task<IdentityUser> GetCurrentUser()
+        {
+            return await _manager.GetUserAsync(HttpContext.User);
+        }
+
+	8.2) Crear usuarios con Id autenticado
+	
+	var user = await GetCurrentUser();
+        //asocia la orden con el usuario logeado
+        purchase.UserId = user.Id;
+
+	8.3) Filtrar informacion por usuario en INDEX
+	
+	// GET: Purchases
+        public async Task<IActionResult> Index()
+        {
+            var kasexContext = _context.Purchase.Include(p => p.Category);
+
+            //obtiene instancia de usuario actual
+            var user = await GetCurrentUser();
+            //itera y referencia purchases existentes en base de datos
+            var purchases = from p in _context.Purchase
+                                select p;
+            //aplica clausula where para filtrar purchases por propietario
+            purchases = purchases.Where(p => p.CustomerId == user.Id);
+
+            //envia lista filtrada para su renderizacion en "index.cshtml"
+            return View(await purchases.AsNoTracking().ToListAsync());
+        }
+
+
+	
+
+
+
+
+
