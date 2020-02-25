@@ -1,0 +1,33 @@
+create table materia(
+	id int identity(1,1) not null,
+	name varchar(25),
+	primary key(id)
+)
+
+create table teacher(
+	id int identity(1,1) not null,
+	UserId nvarchar(450),
+	name varchar(40),
+	materia int,
+	primary key (id),
+	foreign key(materia) references materia(id)
+)
+
+
+create table student(
+	id int identity(1,1) not null,
+	UserId nvarchar(450),
+	name varchar(40),
+	materia int,
+	primary key (id),
+	foreign key(materia) references materia(id)
+)
+
+
+create table note(
+	id int identity(1,1) not null,
+	nota varchar(4),
+	alumno int,
+	primary key (id),
+	foreign key(alumno) references student(id)
+)
